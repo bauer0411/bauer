@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<title>GMDB</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #121212;
+    color: #fff;
+    margin: 0;
+    padding: 20px;
+  }
+  h1 {
+    text-align: center;
+    font-weight: 700;
+    font-size: 3rem;
+    margin-bottom: 0;
+    color: #fff;
+  }
+  #subtitle {
+    text-align: center;
+    color: #bbb;
+    font-size: 0.9rem;
+    margin-top: -12px;
+    margin-bottom: 30px;
+    font-weight: 400;
+    font-style: italic;
+  }
+  #genre-container {
+    max-width: 900px;
+    margin: 0 auto 30px auto;
+    background-color: #1f1f1f;
+    border-radius: 8px;
+    padding: 10px;
+    height: 140px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: #bb86fc transparent;
+  }
+  #genre-container::-webkit-scrollbar {
+    width: 8px;
+  }
+  #genre-container::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  #genre-container::-webkit-scrollbar-thumb {
+    background-color: #bb86fc;
+    border-radius: 20px;
+  }
+  .genre-btn {
+    flex: 0 0 auto;
+    background-color: #2a2a2a;
+    border: none;
+    border-radius: 20px;
+    color: #fff;
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.25s ease;
+    user-select: none;
+  }
+  .genre-btn:hover {
+    background-color: #bb86fc;
+    color: #121212;
+  }
+  .genre-btn.active {
+    background-color: #bb86fc;
+    color: #121212;
+    font-weight: 700;
+  }
+  #movie-list {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  .movie {
+    background-color: #1f1f1f;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    display: flex;
+    gap: 20px;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(187, 134, 252, 0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .movie:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 20px rgba(187, 134, 252, 0.7);
+  }
+  .movie img {
+    width: 110px;
+    border-radius: 10px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+  }
+  .movie-info {
+    flex-grow: 1;
+    color: #fff;
+  }
+  .movie-info h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: #fff;
+  }
+  .movie-info p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #fff;
+  }
+  #pagination {
+    text-align: center;
+    margin-top: 30px;
+  }
+  #pagination button {
+    margin: 0 6px;
+    padding: 10px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    background-color: #2a2a2a;
+    color: #fff;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+  #pagination button.active {
+    background-color: #bb86fc;
+    color: #121212;
+    font-weight: 700;
+  }
+  #pagination button:hover:not(.active) {
+    background-color: #3a3a3a;
+  }
+  #modal {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(18,18,18,0.9);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 0.3s ease forwards;
+  }
+  #modal-content {
+    background: #222;
+    max-width: 600px;
+    padding: 25px 30px;
+    border-radius: 14px;
+    position: relative;
+    box-shadow: 0 8px 30px rgba(187, 134, 252, 0.7);
+    max-height: 80vh;
+    overflow-y: auto;
+    color: #fff;
+  }
+  #modal-close {
+    position: absolute;
+    top: 15px; right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #bb86fc;
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.3s ease;
+  }
+  #modal-close:hover {
+    color: #e573fc;
+  }
+  #modal-content img {
+    float: left;
+    margin-right: 20px;
+    border-radius: 10px;
+    max-width: 150px;
+    max-height: 225px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+  }
+  #modal-content h2 {
+    margin-top: 0;
+    font-weight: 700;
+    color: #fff;
+  }
+  #modal-content p {
+    clear: both;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 10px;
+    color: #fff;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @media (max-width: 640px) {
+    .movie {
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+    .movie img {
+      margin-bottom: 10px;
+      width: 80%;
+      max-width: 200px;
+    }
+    #modal-content img {
+      float: none;
+      margin: 0 auto 20px auto;
+      display: block;
+    }
+  }
+</style>
+</head>
+<body>
+  <h1>GMDB</h1>
+  <div id="subtitle">Great Movie Database</div>
+
+  <div id="genre-container"></div>
+
+  <div id="movie-list">불러오는 중...</div>
+  <div id="pagination"></div>
+
+  <div id="modal">
+    <div id="modal-content">
+      <span id="modal-close">&times;</span>
+      <img id="modal-poster" src="" alt="포스터" />
+      <h2 id="modal-title"></h2>
+      <p><strong>개봉 연도:</strong> <span id="modal-year"></span></p>
+      <p><strong>장르:</strong> <span id="modal-genres"></span></p>
+      <p><strong>감독:</strong> <span id="modal-director"></span></p>
+      <p><strong>주연 배우:</strong> <span id="modal-cast"></span></p>
+      <p><strong>평점:</strong> <span id="modal-rating"></span></p>
+      <p><strong>줄거리:</strong></p>
+      <p id="modal-overview"></p>
+    </div>
+  </div>
+
+<script>
+const tmdbKey = '68cad4f7e689fdb4353028874c961118';
+const MIN_VOTE_COUNT = 400;
+const MOVIES_PER_PAGE = 10;
+
+let genreMap = {};
+let currentGenre = '';
+let currentPage = 1;
+let loadedMovies = [];
+
+async function getGenres() {
+  const res = await fetch(`https://api.themoviedb.org/3/genre/movie/list?api_key=${tmdbKey}&language=ko-KR`);
+  const data = await res.json();
+  genreMap = {};
+  const container = document.getElementById('genre-container');
+  container.innerHTML = '';
+
+  const allBtn = document.createElement('button');
+  allBtn.textContent = '전체 장르';
+  allBtn.className = 'genre-btn active';
+  allBtn.addEventListener('click', () => {
+    setActiveGenre('');
+  });
+  container.appendChild(allBtn);
+
+  data.genres.forEach(g => {
+    genreMap[g.id] = g.name;
+    const btn = document.createElement('button');
+    btn.textContent = g.name;
+    btn.className = 'genre-btn';
+    btn.dataset.genreId = g.id;
+    btn.addEventListener('click', () => {
+      setActiveGenre(g.id);
+    });
+    container.appendChild(btn);
+  });
+}
+
+async function fetchMoviesByGenre(genreId, page=1) {
+  const genreParam = genreId ? `&with_genres=${genreId}` : '';
+  const url = `https://api.themoviedb.org/3/discover/movie?api_key=${tmdbKey}&language=ko-KR${genreParam}&sort_by=vote_average.desc&vote_count.gte=${MIN_VOTE_COUNT}&page=${page}`;
+  const res = await fetch(url);
+  const data = await res.json();
+  return data;
+}
+
+async function getMovieCredits(movieId) {
+  const res = await fetch(`https://api.themoviedb.org/3/movie/${movieId}/credits?api_key=${tmdbKey}&language=ko-KR`);
+  if (!res.ok) return { director: '정보 없음', cast: [] };
+  const data = await res.json();
+  const director = data.crew.find(c => c.job === 'Director')?.name || '정보 없음';
+  const cast = data.cast.slice(0,5).map(c => c.name);
+  return { director, cast };
+}
+
+async function loadMovies(genreId) {
+  let allMovies = [];
+  for(let page=1; page<=2; page++) {
+    const movieData = await fetchMoviesByGenre(genreId, page);
+    const movies = movieData.results || [];
+    for(const movie of movies) {
+      const credits = await getMovieCredits(movie.id);
+      allMovies.push({
+        id: movie.id,
+        title: movie.title,
+        year: movie.release_date ? movie.release_date.slice(0,4) : '정보 없음',
+        rating: movie.vote_average.toFixed(1),
+        poster: movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '',
+        overview: movie.overview || '줄거리 없음',
+        genre_ids: movie.genre_ids || [],
+        director: credits.director,
+        cast: credits.cast
+      });
+      if(allMovies.length >= 20) break;
+    }
+    if(allMovies.length >= 20) break;
+  }
+  return allMovies;
+}
+
+function renderMoviesPage(movies, page) {
+  const container = document.getElementById('movie-list');
+  container.innerHTML = '';
+  if (movies.length === 0) {
+    container.innerHTML = '<p>영화를 찾을 수 없습니다.</p>';
+    return;
+  }
+  const start = (page -1)*MOVIES_PER_PAGE;
+  const end = start + MOVIES_PER_PAGE;
+  const pageMovies = movies.slice(start, end);
+
+  pageMovies.forEach(movie => {
+    const genreNames = movie.genre_ids.map(id => genreMap[id] || '').filter(Boolean).join(', ') || '정보 없음';
+
+    const div = document.createElement('div');
+    div.className = 'movie';
+    div.innerHTML = `
+      <img src="${movie.poster}" alt="포스터" />
+      <div class="movie-info">
+        <h3>${movie.title} (${movie.year})</h3>
+        <p><strong>장르:</strong> ${genreNames}</p>
+        <p><strong>감독:</strong> ${movie.director}</p>
+        <p><strong>주연 배우:</strong> ${movie.cast.join(', ')}</p>
+        <p><strong>평점:</strong> ${movie.rating}</p>
+      </div>
+    `;
+    div.addEventListener('click', () => {
+      showModal(movie);
+    });
+    container.appendChild(div);
+  });
+  renderPagination(movies.length, page);
+}
+
+function renderPagination(totalMovies, currentPage) {
+  const pageCount = Math.ceil(totalMovies / MOVIES_PER_PAGE);
+  const container = document.getElementById('pagination');
+  container.innerHTML = '';
+  for(let i=1; i<=pageCount; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    if(i === currentPage) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      currentPage = i;
+      renderMoviesPage(loadedMovies, currentPage);
+      window.scrollTo({top:0, behavior:'smooth'});
+    });
+    container.appendChild(btn);
+  }
+}
+
+function showModal(movie) {
+  const modal = document.getElementById('modal');
+  document.getElementById('modal-title').textContent = `${movie.title} (${movie.year})`;
+  document.getElementById('modal-year').textContent = movie.year;
+  const genreNames = movie.genre_ids.map(id => genreMap[id] || '').filter(Boolean).join(', ') || '정보 없음';
+  document.getElementById('modal-genres').textContent = genreNames;
+  document.getElementById('modal-director').textContent = movie.director;
+  document.getElementById('modal-cast').textContent = movie.cast.join(', ');
+  document.getElementById('modal-rating').textContent = movie.rating;
+  document.getElementById('modal-overview').textContent = movie.overview;
+  document.getElementById('modal-poster').src = movie.poster;
+  modal.style.display = 'flex';
+}
+
+function setActiveGenre(genreId) {
+  currentGenre = genreId;
+  currentPage = 1;
+  const buttons = document.querySelectorAll('.genre-btn');
+  buttons.forEach(btn => {
+    if(btn.dataset.genreId == genreId || (genreId === '' && btn.textContent === '전체 장르')) {
+      btn.classList.add('active');
+    } else {
+      btn.classList.remove('active');
+    }
+  });
+  document.getElementById('movie-list').textContent = '불러오는 중...';
+  loadMovies(currentGenre).then(movies => {
+    loadedMovies = movies;
+    renderMoviesPage(loadedMovies, currentPage);
+  });
+}
+
+document.getElementById('modal-close').addEventListener('click', () => {
+  document.getElementById('modal').style.display = 'none';
+});
+document.getElementById('modal').addEventListener('click', e => {
+  if(e.target === document.getElementById('modal')) {
+    document.getElementById('modal').style.display = 'none';
+  }
+});
+
+(async () => {
+  await getGenres();
+  setActiveGenre('');
+})();
+</script>
+</body>
+</html>
